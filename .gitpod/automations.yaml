@@ -1,0 +1,48 @@
+services:
+  postgres:
+    name: PostgreSQL
+    description: Database for n8n development
+    commands:
+      start: >
+        docker run -d --name n8n-postgres 
+        -e POSTGRES_USER=n8n 
+        -e POSTGRES_PASSWORD=n8n 
+        -e POSTGRES_DB=n8n
+        -p 5432:5432 
+        postgres:13
+      ready: docker exec n8n-postgres pg_isready -U n8n
+
+tasks:
+  install:
+    name: Install Dependencies
+    command: npm install
+    triggeredBy: ['postDevcontainerStart']
+
+  build:
+    name: Build n8n
+    command: npm run build
+    dependsOn: ['install']
+
+  dev:
+    name: Start Development Server
+    command: npm run dev
+    dependsOn: ['build']
+    triggeredBy: ['postDevcontainerStart']
+
+  test:
+    name: Run Tests
+    command: npm run test
+    dependsOn: ['install']
+    triggeredBy: ['manual']
+
+  lint:
+    name: Lint Code
+    command: npm run lint
+    dependsOn: ['install']
+    triggeredBy: ['manual']
+
+  db-migrate:
+    name: Run Database Migrations
+    command: npm run db:migrate
+    dependsOn: ['install']
+    triggeredBy: ['postDevcontainerStart']
